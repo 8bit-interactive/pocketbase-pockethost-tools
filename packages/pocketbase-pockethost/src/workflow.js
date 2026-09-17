@@ -28,8 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: \${{ github.ref_name == 'staging' && 'staging' || 'production' }}
     env:
-      POCKETHOST_FTP_USERNAME: \${{ secrets.POCKETHOST_FTP_USERNAME }}
-      POCKETHOST_FTP_PASSWORD: \${{ secrets.POCKETHOST_FTP_PASSWORD }}
+      POCKETHOST_SFTP_USERNAME: \${{ secrets.POCKETHOST_SFTP_USERNAME }}
+      POCKETHOST_SFTP_PRIVATE_KEY: \${{ secrets.POCKETHOST_SFTP_PRIVATE_KEY }}
+      POCKETHOST_SFTP_PASSPHRASE: \${{ secrets.POCKETHOST_SFTP_PASSPHRASE }}
+      POCKETHOST_SFTP_HOST: \${{ vars.POCKETHOST_SFTP_HOST }}
+      POCKETHOST_SFTP_PORT: \${{ vars.POCKETHOST_SFTP_PORT }}
       POCKETHOST_TENANT_ID: \${{ vars.POCKETHOST_TENANT_ID != '' && vars.POCKETHOST_TENANT_ID || secrets.POCKETHOST_TENANT_ID }}
       HEALTHCHECK_BASE_URL: \${{ vars.HEALTHCHECK_BASE_URL }}
       GITHUB_REF_NAME: \${{ github.ref_name }}
@@ -70,4 +73,3 @@ export async function installWorkflow(projectRoot, { force = false } = {}) {
 
   return workflowPath;
 }
-

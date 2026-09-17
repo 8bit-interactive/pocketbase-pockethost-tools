@@ -26,6 +26,7 @@ Usage:
   pocketbase-pockethost doctor [--strict] [--for deploy] [--env production]
   pocketbase-pockethost health [--env production]
   pocketbase-pockethost deploy [--env production] [--dry-run]
+  pocketbase-pockethost sftp:deploy [--env production] [--dry-run]
   pocketbase-pockethost ftp:deploy [--env production] [--dry-run]
   pocketbase-pockethost workflow:install [--force]
   pocketbase-pockethost migration:new <name>
@@ -140,7 +141,7 @@ async function commandDeploy(options) {
   });
 
   console.log(`Deployment target environment: ${result.environmentName}`);
-  console.log(`FTP host: ${result.ftpHost}`);
+  console.log(`SFTP host: ${result.sftpHost}:${result.sftpPort}`);
   console.log(`pb_public -> ${result.publicDir}`);
 
   if (result.surface.pbHooks) {
@@ -253,6 +254,7 @@ export async function runCli(argv) {
       await commandHealth(values);
       return;
     case "deploy":
+    case "sftp:deploy":
     case "ftp:deploy":
       await commandDeploy(values);
       return;
