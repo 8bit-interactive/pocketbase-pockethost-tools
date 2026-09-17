@@ -1,0 +1,4 @@
+interface:
+  display_name: "PocketBase + Pockethost"
+  short_description: "PocketBase runtime and Pockethost SFTP deployment"
+  default_prompt: "Use $pocketbase-pockethost to implement or debug PocketBase hooks, migrations, /page-scoped SPA routing, local validation, GitHub Actions, SFTP deployment, and health checks."

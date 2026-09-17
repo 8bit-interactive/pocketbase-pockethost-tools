@@ -4,7 +4,7 @@ SHELL := /bin/sh
 
 CLI ?= npx pocketbase-pockethost
 
-.PHONY: build check deploy dev ftp-deploy health install lint test workflow-install
+.PHONY: build check deploy dev ftp-deploy health install lint sftp-deploy test workflow-install
 
 install:
 	npm install
@@ -24,7 +24,11 @@ dev:
 deploy:
 	$(CLI) deploy
 
+sftp-deploy:
+	$(CLI) sftp:deploy
+
 ftp-deploy:
+	@echo "Deprecated: use 'make sftp-deploy' or '$(CLI) sftp:deploy'." >&2
 	$(CLI) ftp:deploy
 
 health:

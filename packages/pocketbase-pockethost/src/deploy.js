@@ -1,12 +1,29 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Client } from "basic-ftp";
+import SftpClient from "ssh2-sftp-client";
 import { CommandError } from "./errors.js";
 import { detectProjectSurface, resolveEnvironmentName, resolveHealthcheckBaseUrl, resolveTenantId } from "./project.js";
 
 async function deployDirectory(client, localDir, remoteDir) {
-  await client.ensureDir(remoteDir);
-  await client.uploadFromDir(localDir, remoteDir);
+  await client.uploadDir(localDir, remoteDir, { useFastput: false });
+}
+
+async function resolvePrivateKey() {
+  const privateKey = process.env.POCKETHOST_SFTP_PRIVATE_KEY || "";
+  if (privateKey) {
+    return privateKey.replace(/\\n/g, "\n");
+  }
+
+  const privateKeyPath = process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH || "";
+  if (!privateKeyPath) {
+    return "";
+  }
+
+  try {
+    return await fs.readFile(privateKeyPath, "utf8");
+  } catch (error) {
+    throw new CommandError(`Could not read POCKETHOST_SFTP_PRIVATE_KEY_PATH: ${error.message}`);
+  }
 }
 
 export async function runHealthcheck(project, environmentName) {
@@ -43,32 +60,36 @@ export async function runHealthcheck(project, environmentName) {
 export async function deployProject(project, options = {}) {
   const environmentName = await resolveEnvironmentName(project, options);
   const tenantId = resolveTenantId(project, environmentName);
-  const ftpUsername = process.env.POCKETHOST_FTP_USERNAME || "";
-  const ftpPassword = process.env.POCKETHOST_FTP_PASSWORD || "";
-  const ftpHost = process.env.POCKETHOST_FTP_HOST || "ftp.pockethost.io";
+  const sftpUsername = process.env.POCKETHOST_SFTP_USERNAME || "";
+  const sftpHost = process.env.POCKETHOST_SFTP_HOST || "ftp.pockethost.io";
+  const sftpPort = Number(process.env.POCKETHOST_SFTP_PORT || "2222");
+  const sftpPassphrase = process.env.POCKETHOST_SFTP_PASSPHRASE || "";
   const dryRun = options.dryRun === true;
   const surface = await detectProjectSurface(project.projectRoot);
 
-  if (!ftpUsername) {
-    throw new CommandError(`Missing POCKETHOST_FTP_USERNAME for environment '${environmentName}'.`);
+  if (!sftpUsername) {
+    throw new CommandError(`Missing POCKETHOST_SFTP_USERNAME for environment '${environmentName}'.`);
   }
 
-  if (!ftpPassword) {
-    throw new CommandError(`Missing POCKETHOST_FTP_PASSWORD for environment '${environmentName}'.`);
+  if (!Number.isInteger(sftpPort) || sftpPort <= 0) {
+    throw new CommandError("POCKETHOST_SFTP_PORT must be a positive integer.");
   }
 
-  if ((surface.pbHooks || surface.pbMigrations) && !tenantId) {
-    throw new CommandError(`Missing POCKETHOST_TENANT_ID for environment '${environmentName}'. Hooks and migrations require a tenant-scoped deploy path.`);
+  if (surface.pbPublic || surface.pbHooks || surface.pbMigrations) {
+    if (!tenantId) {
+      throw new CommandError(`Missing POCKETHOST_TENANT_ID for environment '${environmentName}'. SFTP deployment requires an instance-scoped path.`);
+    }
   }
 
-  const publicDir = tenantId ? `${tenantId}/pb_public` : "pb_public";
-  const hooksDir = tenantId ? `${tenantId}/pb_hooks` : "";
-  const migrationsDir = tenantId ? `${tenantId}/pb_migrations` : "";
+  const publicDir = tenantId ? `/${tenantId}/pb_public` : "";
+  const hooksDir = tenantId ? `/${tenantId}/pb_hooks` : "";
+  const migrationsDir = tenantId ? `/${tenantId}/pb_migrations` : "";
 
   if (dryRun) {
     return {
       environmentName,
-      ftpHost,
+      sftpHost,
+      sftpPort,
       publicDir,
       hooksDir,
       migrationsDir,
@@ -76,15 +97,20 @@ export async function deployProject(project, options = {}) {
     };
   }
 
-  const client = new Client();
-  client.ftp.verbose = false;
+  const privateKey = await resolvePrivateKey();
+  if (!privateKey) {
+    throw new CommandError("Missing POCKETHOST_SFTP_PRIVATE_KEY or POCKETHOST_SFTP_PRIVATE_KEY_PATH.");
+  }
+
+  const client = new SftpClient("pockethost-deploy");
 
   try {
-    await client.access({
-      host: ftpHost,
-      user: ftpUsername,
-      password: ftpPassword,
-      secure: false
+    await client.connect({
+      host: sftpHost,
+      port: sftpPort,
+      username: sftpUsername,
+      privateKey,
+      ...(sftpPassphrase ? { passphrase: sftpPassphrase } : {})
     });
 
     if (surface.pbPublic) {
@@ -102,7 +128,7 @@ export async function deployProject(project, options = {}) {
       await deployDirectory(client, path.join(project.projectRoot, "pb_migrations"), migrationsDir);
     }
   } finally {
-    client.close();
+    await client.end().catch(() => {});
   }
 
   if (surface.pbPublic) {
@@ -111,7 +137,8 @@ export async function deployProject(project, options = {}) {
 
   return {
     environmentName,
-    ftpHost,
+    sftpHost,
+    sftpPort,
     publicDir,
     hooksDir,
     migrationsDir,

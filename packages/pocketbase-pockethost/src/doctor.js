@@ -29,16 +29,20 @@ export async function runDoctor(project, options = {}) {
   }
 
   if (forDeploy) {
-    if (!process.env.POCKETHOST_FTP_USERNAME) {
-      issues.push(`Missing POCKETHOST_FTP_USERNAME for environment '${environmentName}'.`);
+    if (!process.env.POCKETHOST_SFTP_USERNAME) {
+      issues.push(`Missing POCKETHOST_SFTP_USERNAME for environment '${environmentName}'.`);
     }
 
-    if (!process.env.POCKETHOST_FTP_PASSWORD) {
-      issues.push(`Missing POCKETHOST_FTP_PASSWORD for environment '${environmentName}'.`);
+    if (!process.env.POCKETHOST_SFTP_PRIVATE_KEY && !process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH) {
+      issues.push(`Missing POCKETHOST_SFTP_PRIVATE_KEY or POCKETHOST_SFTP_PRIVATE_KEY_PATH for environment '${environmentName}'.`);
     }
 
-    if ((surface.pbHooks || surface.pbMigrations) && !tenantId) {
-      issues.push(`Missing POCKETHOST_TENANT_ID for environment '${environmentName}'.`);
+    if (process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH && !(await fileExists(process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH))) {
+      issues.push(`POCKETHOST_SFTP_PRIVATE_KEY_PATH does not exist: ${process.env.POCKETHOST_SFTP_PRIVATE_KEY_PATH}`);
+    }
+
+    if ((surface.pbPublic || surface.pbHooks || surface.pbMigrations) && !tenantId) {
+      issues.push(`Missing POCKETHOST_TENANT_ID for environment '${environmentName}'. SFTP deployment requires an instance-scoped path.`);
     }
   }
 

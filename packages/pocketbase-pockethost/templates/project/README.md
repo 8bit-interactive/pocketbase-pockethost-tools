@@ -23,6 +23,8 @@ GitHub Environments:
 
 Required GitHub Environment values:
 
-- `POCKETHOST_FTP_USERNAME` as a secret
-- `POCKETHOST_FTP_PASSWORD` as a secret
+- `POCKETHOST_SFTP_USERNAME` as a secret containing the PocketHost account email
+- `POCKETHOST_SFTP_PRIVATE_KEY` as a secret containing an Ed25519 private key
 - `POCKETHOST_TENANT_ID` as a variable or secret
+
+Pockethost SFTP uses `ftp.pockethost.io` on port `2222`. The legacy `ftp:deploy` command is kept as a compatibility alias; new deployments should use `sftp:deploy` or `deploy`.

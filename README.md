@@ -11,16 +11,15 @@ It is designed for:
 - small zero-build sites served from `pb_public`
 - PocketBase projects that still need hooks and migrations
 - GitHub-based deploys
-- manual FTP deploys for people not using GitHub
+- manual SFTP deploys for people not using GitHub
 
 ## What Lives In This Repository
 
-### 1. Skills
+### 1. Skill
 
-These folders keep the Codex guidance:
+This folder keeps the unified Codex guidance:
 
-- `pocketbase/`
-- `pockethost/`
+- `skills/pocketbase-pockethost/`
 
 They still document conventions, but the preferred operational surface is now the CLI.
 
@@ -36,9 +35,9 @@ The preferred model is:
 
 ### 3. Node CLI + Library
 
-The new automation core lives in:
+The automation core lives in:
 
-- [packages/pocketbase-pockethost/package.json](/Users/evaisse/Sites/projects/pocketbase-pockethost-skills/packages/pocketbase-pockethost/package.json)
+- [packages/pocketbase-pockethost/package.json](/Users/evaisse/Developer/repos/github.com/8bit-interactive/pocketbase-pockethost-tools/packages/pocketbase-pockethost/package.json)
 
 This package provides:
 
@@ -48,7 +47,7 @@ This package provides:
 - migration and hook generators
 - health checks
 - GitHub workflow generation
-- manual FTP deploys
+- manual SFTP deploys
 
 ## Default Project Model
 
@@ -77,7 +76,7 @@ The v1 command surface is:
 - `npx pocketbase-pockethost doctor`
 - `npx pocketbase-pockethost health`
 - `npx pocketbase-pockethost deploy`
-- `npx pocketbase-pockethost ftp:deploy`
+- `npx pocketbase-pockethost sftp:deploy`
 - `npx pocketbase-pockethost workflow:install`
 - `npx pocketbase-pockethost migration:new <name>`
 - `npx pocketbase-pockethost hooks:new <name>`

@@ -8,6 +8,7 @@
     "health": "pocketbase-pockethost health",
     "test": "pocketbase-pockethost test",
     "deploy": "pocketbase-pockethost deploy",
+    "sftp:deploy": "pocketbase-pockethost sftp:deploy",
     "ftp:deploy": "pocketbase-pockethost ftp:deploy",
     "workflow:install": "pocketbase-pockethost workflow:install",
     "install:pocketbase": "pocketbase-pockethost install"

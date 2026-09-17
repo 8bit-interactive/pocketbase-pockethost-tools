@@ -1,6 +1,7 @@
-# Reference workflow:
-# downstream repositories usually copy the standalone template instead of calling this file directly.
-name: Reusable Pockethost Deploy
+# Legacy FTPS compatibility workflow.
+# New projects should use the generated pocketbase-pockethost workflow, which deploys over SFTP.
+# Downstream repositories should copy the standalone SFTP template instead of calling this file directly.
+name: Legacy Reusable Pockethost FTPS Deploy
 
 on:
   workflow_call:
