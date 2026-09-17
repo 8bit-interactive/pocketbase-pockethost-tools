@@ -16,15 +16,15 @@ Prefer PocketBase conventions over custom framework layers. For any server-side 
 1. If the task touches `pb_hooks`, `pb_migrations`, custom routes, auth hooks, or PocketBase JavaScript commands, read [references/pocketbase-javascript-goja.md](references/pocketbase-javascript-goja.md).
 2. If the project serves a SPA from `pb_public`, read [references/spa-routing.md](references/spa-routing.md).
 3. If the task involves validating migrations locally, read [references/local-pocketbase-migrations.md](references/local-pocketbase-migrations.md) and use [assets/Makefile](assets/Makefile) as the default project template.
-4. In every development, AI-agent, and CI workflow, ensure a superuser exists before starting PocketBase, then run `pocketbase serve --dev` for the app and integration-test process.
-5. For a fresh local or CI data directory, create the superuser with a command such as:
+4. In every development, AI-agent, and CI workflow, ensure a superuser exists before starting PocketBase. Use the idempotent `superuser upsert` command, then run `pocketbase serve --dev` for the app and integration-test process.
+5. At startup, upsert the superuser and start PocketBase with commands such as:
 
    ```bash
-   ./pocketbase superuser create your-email@example.com yourStrongPassword
-   ./pocketbase serve --dev
+   ./pocketbase superuser upsert admin@example.com 'yourStrongPassword'
+   ./pocketbase serve
    ```
 
-   Use the same data-directory options for both commands when the project does not use PocketBase's default `pb_data` directory. If the superuser already exists, treat that as an already-completed setup step. Never commit credentials; inject the password through a local secret mechanism or a CI secret.
+   `superuser upsert` is safe to rerun: it creates the superuser when missing and updates it when it already exists. For development, AI-agent, and CI workflows, use `./pocketbase serve --dev` as the second command. Use the same data-directory options for both commands when the project does not use PocketBase's default `pb_data` directory. Never commit credentials; inject the password through a local secret mechanism or a CI secret.
 6. Keep the implementation compatible with ES5-era JavaScript and PocketBase runtime APIs.
 7. Prefer simple collection rules and explicit type conversions over clever abstractions.
 8. Test real app behavior in the browser with Playwright by default.
@@ -41,7 +41,7 @@ Prefer PocketBase conventions over custom framework layers. For any server-side 
 - For SPA projects, prefer mounting the router under `/page` and keep static assets under `/assets` or `/dist`.
 - Treat `/page` as a routing namespace, not a real folder under `pb_public`.
 - For local migration validation, use the official PocketBase binary for the current platform.
-- Start local, AI-agent, and CI app workflows with `pocketbase serve --dev` after ensuring the local superuser exists.
+- Start local, AI-agent, and CI app workflows with an idempotent `pocketbase superuser upsert` followed by `pocketbase serve --dev`.
 - Prefer the copyable [assets/Makefile](assets/Makefile) when introducing local PocketBase commands.
 
 ## References
